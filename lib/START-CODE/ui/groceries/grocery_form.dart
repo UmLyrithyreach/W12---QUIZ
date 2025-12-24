@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../models/grocery.dart';
 
@@ -12,15 +13,15 @@ class NewItem extends StatefulWidget {
 }
 
 class _NewItemState extends State<NewItem> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _quantityController = TextEditingController();
 
-  // Default settings
-  static const defautName = "New grocery";
-  static const defaultQuantity = 1;
+  // // Default settings
+  // static const defautName = "New grocery";
+  // static const defaultQuantity = 1;
   static const defaultCategory = GroceryCategory.fruit;
 
-  // Inputs
-  final _nameController = TextEditingController();
-  final _quantityController = TextEditingController();
   GroceryCategory _selectedCategory = defaultCategory;
 
   @override
@@ -28,8 +29,8 @@ class _NewItemState extends State<NewItem> {
     super.initState();
 
     // Initialize intputs with default settings
-    _nameController.text = defautName;
-    _quantityController.text = defaultQuantity.toString();
+    _nameController.text;
+    _quantityController.text;
   }
 
   @override
@@ -43,6 +44,10 @@ class _NewItemState extends State<NewItem> {
 
   void onReset() {
     // Will be implemented later - Reset all fields to the initial values
+    _nameController.clear();
+    _quantityController.clear();
+
+    _formKey.currentState?.reset();
   }
 
   void onAdd() {
@@ -57,17 +62,25 @@ class _NewItemState extends State<NewItem> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            TextField(
+            TextFormField(
               controller: _nameController,
               maxLength: 50,
               decoration: const InputDecoration(label: Text('Name')),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Name cannot be empty';
+                }
+                return null;
+              },
             ),
+
             const SizedBox(height: 10),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
-                  child: TextField(
+                  child: TextFormField(
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     controller: _quantityController,
                     decoration: const InputDecoration(label: Text('Quantity')),
                   ),
@@ -76,7 +89,24 @@ class _NewItemState extends State<NewItem> {
                 Expanded(
                   child: DropdownButtonFormField<GroceryCategory>(
                     initialValue: _selectedCategory,
-                    items: [  ],
+                    items: GroceryCategory.values
+                        .map(
+                          (category) => DropdownMenuItem(
+                            value: category,
+                            child: Row(
+                              children: [
+                                Container(
+                                  color: category.color,
+                                  width: 15,
+                                  height: 15,
+                                ),
+                                SizedBox(width: 10,),
+                                Text(category.label),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (value) {
                       if (value != null) {
                         setState(() {
@@ -93,10 +123,7 @@ class _NewItemState extends State<NewItem> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(onPressed: onReset, child: const Text('Reset')),
-                ElevatedButton(
-                  onPressed: onAdd,
-                  child: const Text('Add Item'),
-                ),
+                ElevatedButton(onPressed: onAdd, child: const Text('Add Item')),
               ],
             ),
           ],
